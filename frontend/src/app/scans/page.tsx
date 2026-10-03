@@ -24,9 +24,14 @@ export default async function ScansPage({
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">МРТ-снимки</h1>
-        <Link href="/scans/new" className="rounded bg-blue-700 px-4 py-2 text-white">
-          Добавить
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/scans/predict" className="rounded bg-blue-700 px-4 py-2 text-white">
+            Распознать
+          </Link>
+          <Link href="/scans/new" className="rounded border bg-white px-4 py-2">
+            Добавить
+          </Link>
+        </div>
       </div>
 
       <form className="flex flex-col gap-2 sm:flex-row">
@@ -62,6 +67,7 @@ export default async function ScansPage({
               </Link>
               <p className="text-sm text-gray-600">
                 {TUMOR_LABELS[s.tumor_type]} · {s.dataset}
+                {s.confidence !== null && ` · распознано моделью, ${(s.confidence * 100).toFixed(1)}%`}
               </p>
             </li>
           ))}

@@ -25,9 +25,15 @@ export type Scan = {
   plane: Plane | null;
   description: string | null;
   file_name: string | null;
+  predicted_label: TumorType | null;
+  confidence: number | null;
+  image_path: string | null;
   created_at: string;
 };
 
-export type ScanInput = Omit<Scan, "id" | "created_at">;
+export type ScanInput = Pick<
+  Scan,
+  "title" | "dataset" | "tumor_type" | "plane" | "description" | "file_name"
+>;
 
 export type FormState = { error?: string };

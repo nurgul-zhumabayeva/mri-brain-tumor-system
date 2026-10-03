@@ -10,9 +10,18 @@ export default function HomePage() {
         по МРТ-снимкам на основе глубокого обучения» и помогает готовить и анализировать данные для
         обучения модели.
       </p>
-      <Link href="/scans" className="inline-block rounded bg-blue-700 px-4 py-2 text-white">
-        Перейти к снимкам
-      </Link>
+      <p>
+        Встроенная нейросеть ResNet-18 распознаёт по загруженному снимку глиому, менингиому, опухоль
+        гипофиза или отсутствие опухоли.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Link href="/scans/predict" className="rounded bg-blue-700 px-4 py-2 text-white">
+          Распознать снимок
+        </Link>
+        <Link href="/scans" className="rounded border bg-white px-4 py-2">
+          Перейти к снимкам
+        </Link>
+      </div>
     </section>
   );
 }
