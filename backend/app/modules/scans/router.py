@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.modules.inference.service import InvalidImageError
 
 from . import service
 from .models import Scan
 from .schemas import ScanCreate, ScanOut, ScanUpdate, TumorType
 
 router = APIRouter(prefix="/scans", tags=["scans"])
+
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
 def get_or_404(scan_id: int, session: Session = Depends(get_session)) -> Scan:
@@ -41,6 +44,17 @@ def create_scan(data: ScanCreate, session: Session = Depends(get_session)):
     except IntegrityError:
         session.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "Scan with this file name exists")
+
+
+@router.post("/predict", response_model=ScanOut, status_code=status.HTTP_201_CREATED)
+def predict_scan(file: UploadFile, session: Session = Depends(get_session)):
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File is larger than 10 MB")
+    try:
+        return service.create_scan_from_image(session, file.filename or "scan.jpg", content)
+    except InvalidImageError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.patch("/{scan_id}", response_model=ScanOut)
