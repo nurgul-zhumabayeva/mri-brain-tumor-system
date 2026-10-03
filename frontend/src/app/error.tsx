@@ -2,13 +2,13 @@
 
 export default function ErrorPage({ reset }: { error: Error; reset: () => void }) {
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-bold">Что-то пошло не так</h1>
-      <p className="text-gray-600">
-        Не удалось получить данные. Проверьте, что сервер API запущен, и попробуйте ещё раз.
+    <section className="panel max-w-xl space-y-4 p-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Не удалось получить данные</h1>
+      <p className="text-muted">
+        Сервер API не ответил. Проверьте, что он запущен, и повторите запрос.
       </p>
-      <button onClick={reset} className="rounded border bg-white px-4 py-2">
-        Повторить
+      <button onClick={reset} className="btn btn-primary">
+        Повторить запрос
       </button>
     </section>
   );
