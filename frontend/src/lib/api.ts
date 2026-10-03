@@ -42,7 +42,11 @@ export const api = {
   async predict(file: File): Promise<Scan> {
     const body = new FormData();
     body.append("file", file, file.name);
-    const res = await fetch(`${API_URL}/scans/predict`, { method: "POST", body, cache: "no-store" });
+    const res = await fetch(`${API_URL}/scans/predict`, {
+      method: "POST",
+      body,
+      cache: "no-store",
+    });
     if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
     return res.json();
   },
