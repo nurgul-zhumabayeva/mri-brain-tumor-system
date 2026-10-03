@@ -33,4 +33,7 @@ class ScanOut(ScanBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    predicted_label: TumorType | None = None
+    confidence: float | None = None
+    image_path: str | None = None
     created_at: datetime

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { PLANES, TUMOR_TYPES } from "@/lib/types";
 import type { FormState, Plane, ScanInput, TumorType } from "@/lib/types";
 
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const INVALID = "Проверьте поля: название, датасет и тип опухоли обязательны.";
 
 function parseForm(formData: FormData): ScanInput | null {
@@ -36,6 +37,25 @@ export async function createScan(_prev: FormState, formData: FormData): Promise<
     id = (await api.create(data)).id;
   } catch {
     return { error: "Не удалось сохранить. Возможно, снимок с таким именем файла уже есть." };
+  }
+  revalidatePath("/scans");
+  redirect(`/scans/${id}`);
+}
+
+export async function predictScan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Выберите файл со снимком." };
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    return { error: "Файл слишком большой. Максимальный размер 10 МБ." };
+  }
+
+  let id: number;
+  try {
+    id = (await api.predict(file)).id;
+  } catch {
+    return { error: "Не удалось распознать снимок. Проверьте, что это изображение JPG или PNG." };
   }
   revalidatePath("/scans");
   redirect(`/scans/${id}`);

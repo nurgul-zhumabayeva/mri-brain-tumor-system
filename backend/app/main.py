@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.modules.scans.router import router as scans_router
@@ -20,3 +23,6 @@ def health() -> dict[str, str]:
 
 
 app.include_router(scans_router)
+
+Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=settings.upload_dir), name="media")

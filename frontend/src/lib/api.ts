@@ -1,6 +1,6 @@
 import type { Scan, ScanInput } from "./types";
 
-const API_URL = process.env.API_URL ?? "http://localhost:8000";
+export const API_URL = process.env.API_URL ?? "http://localhost:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -37,6 +37,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     });
+  },
+
+  async predict(file: File): Promise<Scan> {
+    const body = new FormData();
+    body.append("file", file, file.name);
+    const res = await fetch(`${API_URL}/scans/predict`, { method: "POST", body, cache: "no-store" });
+    if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+    return res.json();
   },
 
   update(id: number, data: Partial<ScanInput>) {

@@ -14,11 +14,35 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
   return (
     <article className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">{scan.title}</h1>
+        <h1 className="text-2xl font-bold break-all">{scan.title}</h1>
         <p className="text-gray-600">
           {TUMOR_LABELS[scan.tumor_type]} · {scan.dataset}
         </p>
       </header>
+
+      {scan.predicted_label && scan.confidence !== null && (
+        <section className="rounded border border-blue-200 bg-blue-50 p-4">
+          <h2 className="font-semibold">Результат распознавания</h2>
+          <p className="text-lg">
+            {TUMOR_LABELS[scan.predicted_label]}, уверенность модели{" "}
+            {(scan.confidence * 100).toFixed(1)}%
+          </p>
+          {scan.predicted_label !== scan.tumor_type && (
+            <p className="text-sm text-gray-600">
+              Тип опухоли в записи изменён вручную и отличается от предсказания модели.
+            </p>
+          )}
+        </section>
+      )}
+
+      {scan.image_path && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/media/${scan.image_path}`}
+          alt={`МРТ-снимок ${scan.title}`}
+          className="max-h-96 max-w-full rounded border bg-black"
+        />
+      )}
 
       <dl className="grid gap-2 rounded border bg-white p-4 sm:grid-cols-2">
         <div>

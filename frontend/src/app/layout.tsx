@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               MRI Brain Tumor Scans
             </Link>
             <Link href="/scans">Снимки</Link>
+            <Link href="/scans/predict">Распознать</Link>
             <Link href="/scans/new">Добавить</Link>
           </nav>
         </header>
