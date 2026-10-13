@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.modules.inference import service as inference
+from app.modules.users.models import User
 
 from .models import Scan
 from .schemas import ScanCreate, ScanUpdate
@@ -31,15 +32,19 @@ def get_scan(session: Session, scan_id: int) -> Scan | None:
     return session.get(Scan, scan_id)
 
 
-def create_scan(session: Session, data: ScanCreate) -> Scan:
-    scan = Scan(**data.model_dump())
+def can_edit(user: User, scan: Scan) -> bool:
+    return user.is_admin or scan.owner_id == user.id
+
+
+def create_scan(session: Session, data: ScanCreate, owner: User) -> Scan:
+    scan = Scan(**data.model_dump(), owner_id=owner.id)
     session.add(scan)
     session.commit()
     session.refresh(scan)
     return scan
 
 
-def create_scan_from_image(session: Session, filename: str, content: bytes) -> Scan:
+def create_scan_from_image(session: Session, filename: str, content: bytes, owner: User) -> Scan:
     label, confidence = inference.predict(content)
 
     suffix = Path(filename).suffix.lower() or ".jpg"
@@ -57,6 +62,7 @@ def create_scan_from_image(session: Session, filename: str, content: bytes) -> S
         confidence=confidence,
         file_name=stored_name,
         image_path=stored_name,
+        owner_id=owner.id,
     )
     session.add(scan)
     session.commit()

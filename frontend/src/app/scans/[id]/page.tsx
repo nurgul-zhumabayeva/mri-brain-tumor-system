@@ -4,16 +4,19 @@ import { ScanForm } from "@/components/ScanForm";
 import { TumorChip } from "@/components/TumorChip";
 import { api } from "@/lib/api";
 import { formatPercent } from "@/lib/model";
+import { canEdit, requireUser } from "@/lib/session";
 import { PLANE_LABELS, TUMOR_LABELS } from "@/lib/types";
 import { deleteScan, updateScan } from "../actions";
 
 export default async function ScanPage({ params }: { params: Promise<{ id: string }> }) {
+  const user = await requireUser();
   const { id } = await params;
   const scanId = Number(id);
   if (!Number.isInteger(scanId)) notFound();
   const scan = await api.get(scanId);
   if (!scan) notFound();
 
+  const editable = canEdit(user, scan.owner_id);
   const predicted = scan.predicted_label !== null && scan.confidence !== null;
 
   return (
@@ -82,6 +85,10 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
               <dd className="break-all">{scan.file_name ?? "Не указано"}</dd>
             </div>
             <div>
+              <dt className="text-sm text-muted">Автор записи</dt>
+              <dd>{scan.owner_name ?? "Начальные данные"}</dd>
+            </div>
+            <div>
               <dt className="text-sm text-muted">Добавлен</dt>
               <dd>{new Date(scan.created_at).toLocaleDateString("ru-RU")}</dd>
             </div>
@@ -95,16 +102,24 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
-      <details className="panel p-5">
-        <summary className="cursor-pointer font-semibold">Изменить запись</summary>
-        <div className="mt-5 max-w-2xl">
-          <ScanForm action={updateScan.bind(null, scan.id)} initial={scan} />
-        </div>
-      </details>
+      {editable ? (
+        <>
+          <details className="panel p-5">
+            <summary className="cursor-pointer font-semibold">Изменить запись</summary>
+            <div className="mt-5 max-w-2xl">
+              <ScanForm action={updateScan.bind(null, scan.id)} initial={scan} />
+            </div>
+          </details>
 
-      <form action={deleteScan.bind(null, scan.id)}>
-        <button className="btn btn-danger">Удалить запись</button>
-      </form>
+          <form action={deleteScan.bind(null, scan.id)}>
+            <button className="btn btn-danger">Удалить запись</button>
+          </form>
+        </>
+      ) : (
+        <p className="panel px-5 py-4 text-sm text-muted">
+          Изменять и удалять эту запись может только её автор или администратор.
+        </p>
+      )}
     </article>
   );
 }

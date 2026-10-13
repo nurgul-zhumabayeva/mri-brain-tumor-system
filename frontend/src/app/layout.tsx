@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "@fontsource-variable/golos-text";
 import { NavLinks } from "@/components/NavLinks";
+import { getCurrentUser } from "@/lib/session";
+import { ROLE_LABELS } from "@/lib/types";
+import { logoutAction } from "./auth-actions";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
   description: "Каталог МРТ-снимков головного мозга и распознавание типа опухоли нейросетью",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="ru">
       <body className="flex min-h-screen flex-col">
@@ -35,7 +40,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </svg>
               MRI Brain Tumor Scans
             </Link>
-            <NavLinks />
+            {user ? (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <NavLinks isAdmin={user.role === "admin"} />
+                <div className="flex items-center gap-3 border-l border-line pl-4">
+                  <span className="text-sm leading-tight">
+                    <span className="block font-semibold">{user.full_name}</span>
+                    <span className="block text-muted">{ROLE_LABELS[user.role]}</span>
+                  </span>
+                  <form action={logoutAction}>
+                    <button className="btn btn-secondary px-3 py-2">Выйти</button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Link href="/login" className="btn btn-secondary px-3 py-2">
+                  Войти
+                </Link>
+                <Link href="/register" className="btn btn-primary px-3 py-2">
+                  Регистрация
+                </Link>
+              </div>
+            )}
           </nav>
         </header>
 

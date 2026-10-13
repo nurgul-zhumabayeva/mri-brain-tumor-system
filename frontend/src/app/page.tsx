@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PredictForm } from "@/components/PredictForm";
 import { TumorChip } from "@/components/TumorChip";
 import { CLASS_METRICS, CLASS_ORDER, MODEL, formatPercent } from "@/lib/model";
+import { requireUser } from "@/lib/session";
 import { predictScan } from "./scans/actions";
 
 const STEPS = [
@@ -19,7 +20,9 @@ const STEPS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  await requireUser();
+
   return (
     <div className="space-y-16">
       <section className="grid items-start gap-x-10 gap-y-8 lg:grid-cols-[1fr_26rem]">

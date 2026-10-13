@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.modules.scans.router import router as scans_router
+from app.modules.users.router import auth_router, users_router
 
 app = FastAPI(title="MRI Brain Tumor Scans API", version="0.1.0")
 
@@ -22,6 +23,8 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+app.include_router(auth_router)
+app.include_router(users_router)
 app.include_router(scans_router)
 
 Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)

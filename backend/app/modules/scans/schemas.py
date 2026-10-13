@@ -36,4 +36,6 @@ class ScanOut(ScanBase):
     predicted_label: TumorType | None = None
     confidence: float | None = None
     image_path: str | None = None
+    owner_id: int | None = None
+    owner_name: str | None = None
     created_at: datetime
