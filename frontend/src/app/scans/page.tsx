@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TumorChip } from "@/components/TumorChip";
 import { api } from "@/lib/api";
+import { requireUser } from "@/lib/session";
 import { formatPercent } from "@/lib/model";
 import { TUMOR_LABELS, TUMOR_TYPES } from "@/lib/types";
 
@@ -11,6 +12,7 @@ export default async function ScansPage({
 }: {
   searchParams: Promise<{ q?: string; tumor_type?: string; page?: string }>;
 }) {
+  await requireUser();
   const { q, tumor_type, page } = await searchParams;
   const current = Math.max(1, Number(page) || 1);
   const items = await api.list(q, tumor_type, current, PAGE_SIZE);

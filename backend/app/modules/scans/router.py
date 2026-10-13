@@ -4,12 +4,14 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.modules.inference.service import InvalidImageError
+from app.modules.users.deps import get_current_user
+from app.modules.users.models import User
 
 from . import service
 from .models import Scan
 from .schemas import ScanCreate, ScanOut, ScanUpdate, TumorType
 
-router = APIRouter(prefix="/scans", tags=["scans"])
+router = APIRouter(prefix="/scans", tags=["scans"], dependencies=[Depends(get_current_user)])
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
@@ -18,6 +20,14 @@ def get_or_404(scan_id: int, session: Session = Depends(get_session)) -> Scan:
     scan = service.get_scan(session, scan_id)
     if scan is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Scan not found")
+    return scan
+
+
+def get_editable(scan: Scan = Depends(get_or_404), user: User = Depends(get_current_user)) -> Scan:
+    if not service.can_edit(user, scan):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Only the author or an administrator can change this scan"
+        )
     return scan
 
 
@@ -38,21 +48,29 @@ def read_scan(scan: Scan = Depends(get_or_404)):
 
 
 @router.post("", response_model=ScanOut, status_code=status.HTTP_201_CREATED)
-def create_scan(data: ScanCreate, session: Session = Depends(get_session)):
+def create_scan(
+    data: ScanCreate,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
     try:
-        return service.create_scan(session, data)
+        return service.create_scan(session, data, user)
     except IntegrityError:
         session.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "Scan with this file name exists")
 
 
 @router.post("/predict", response_model=ScanOut, status_code=status.HTTP_201_CREATED)
-def predict_scan(file: UploadFile, session: Session = Depends(get_session)):
+def predict_scan(
+    file: UploadFile,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
     content = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "File is larger than 10 MB")
     try:
-        return service.create_scan_from_image(session, file.filename or "scan.jpg", content)
+        return service.create_scan_from_image(session, file.filename or "scan.jpg", content, user)
     except InvalidImageError as exc:
         raise HTTPException(422, str(exc)) from exc
 
@@ -60,7 +78,7 @@ def predict_scan(file: UploadFile, session: Session = Depends(get_session)):
 @router.patch("/{scan_id}", response_model=ScanOut)
 def update_scan(
     data: ScanUpdate,
-    scan: Scan = Depends(get_or_404),
+    scan: Scan = Depends(get_editable),
     session: Session = Depends(get_session),
 ):
     try:
@@ -71,5 +89,7 @@ def update_scan(
 
 
 @router.delete("/{scan_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_scan(scan: Scan = Depends(get_or_404), session: Session = Depends(get_session)) -> None:
+def delete_scan(
+    scan: Scan = Depends(get_editable), session: Session = Depends(get_session)
+) -> None:
     service.delete_scan(session, scan)

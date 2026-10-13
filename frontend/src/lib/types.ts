@@ -28,6 +28,23 @@ export type Scan = {
   predicted_label: TumorType | null;
   confidence: number | null;
   image_path: string | null;
+  owner_id: number | null;
+  owner_name: string | null;
+  created_at: string;
+};
+
+export type Role = "doctor" | "admin";
+
+export const ROLE_LABELS: Record<Role, string> = {
+  doctor: "Врач",
+  admin: "Администратор",
+};
+
+export type User = {
+  id: number;
+  email: string;
+  full_name: string;
+  role: Role;
   created_at: string;
 };
 
@@ -36,4 +53,4 @@ export type ScanInput = Pick<
   "title" | "dataset" | "tumor_type" | "plane" | "description" | "file_name"
 >;
 
-export type FormState = { error?: string };
+export type FormState = { error?: string; values?: Record<string, string> };

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { PLANES, TUMOR_TYPES } from "@/lib/types";
 import type { FormState, Plane, ScanInput, TumorType } from "@/lib/types";
 
@@ -71,7 +71,10 @@ export async function updateScan(
 
   try {
     await api.update(id, data);
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return { error: "Изменять запись может только её автор или администратор." };
+    }
     return { error: "Не удалось сохранить изменения." };
   }
   revalidatePath("/scans");

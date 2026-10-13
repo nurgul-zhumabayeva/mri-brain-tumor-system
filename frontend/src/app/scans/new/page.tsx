@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { ScanForm } from "@/components/ScanForm";
+import { requireUser } from "@/lib/session";
 import { createScan } from "../actions";
 
-export default function NewScanPage() {
+export default async function NewScanPage() {
+  await requireUser();
+
   return (
     <section className="max-w-2xl space-y-6">
       <header className="space-y-3">

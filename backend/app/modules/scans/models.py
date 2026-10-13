@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, Float, ForeignKey, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+from app.modules.users.models import User
 
 
 class Scan(Base):
@@ -19,4 +20,13 @@ class Scan(Base):
     predicted_label: Mapped[str | None] = mapped_column(String(50))
     confidence: Mapped[float | None] = mapped_column(Float)
     image_path: Mapped[str | None] = mapped_column(String(255))
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    owner: Mapped[User | None] = relationship(lazy="joined")
+
+    @property
+    def owner_name(self) -> str | None:
+        return self.owner.full_name if self.owner else None
